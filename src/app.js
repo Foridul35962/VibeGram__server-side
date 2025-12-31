@@ -2,6 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import cookies from 'cookie-parser'
 
+//local import
+import errorHandler from './helpers/ErrorHandler.js'
+import authRouter from './routes/auth.routes.js'
+
 const app = express()
 
 app.use(cors({
@@ -14,8 +18,14 @@ app.use(express.urlencoded({extended: false}))
 
 app.use(cookies())
 
+//routers
+app.use('/api/auth', authRouter)
+
 app.get('/', (req, res)=>{
     res.send('vibegram server is running...')
 })
+
+//global error handler
+app.use(errorHandler)
 
 export default app
