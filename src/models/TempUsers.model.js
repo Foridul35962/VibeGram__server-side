@@ -3,30 +3,30 @@ import mongoose from "mongoose";
 const tempUserSchema = new mongoose.Schema({
     fullName: {
         type: String,
-        required: true
     },
     userName: {
         type: String,
         unique: true,
-        required: true
     },
     email: {
         type: String,
         unique: true,
-        required: true
     },
     password: {
         type: String,
-        required: true
     },
-    otp:{
+    otp: {
         type: String,
         required: true
     },
-    expiredOtp:{
+    expiredOtp: {
         type: Date
     },
-    createdAt:{
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    createdAt: {
         type: Date,
         default: Date.now,
         expires: 600
