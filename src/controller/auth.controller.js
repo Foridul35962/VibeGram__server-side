@@ -258,3 +258,39 @@ export const resetPass = [
             )
     })
 ]
+
+export const resendOtp = AsyncHandler(async (req, res) => {
+    const { email, mode } = req.body
+    if (!email || !mode) {
+        throw new ApiErrors(400, 'email and mode are required')
+    }
+
+    const tempUser = await TempUsers.findOne({ email })
+
+    if (!tempUser) {
+        throw new ApiErrors(404, 'time expired try again')
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiredOtp = Date.now() + 5 * 60 * 1000
+
+    tempUser.otp = otp
+    tempUser.expiredOtp = expiredOtp
+
+    let subject, html
+
+    if (mode === 'register') {
+        ({subject, html} = generateVerificationMail(otp))
+    } else if (mode === 'resetPass') {
+        ({subject, html} = generatePasswordResetMail(otp))
+    }
+
+    await tempUser.save()
+    await sendBrevoMail(email, subject, html)
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, {}, 'reset otp successfully')
+        )
+})

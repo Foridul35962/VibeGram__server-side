@@ -10,5 +10,6 @@ authRouter.get('/logout', authController.logOut)
 authRouter.post('/forget-pass', authController.forgetPass)
 authRouter.post('/verify-pass', authController.verifyForgetPass)
 authRouter.patch('/reset-pass', authController.resetPass)
+authRouter.patch('/resend-otp', authController.resendOtp)
 
 export default authRouter
