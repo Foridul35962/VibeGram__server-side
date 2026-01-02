@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         maxlength: 150,
     },
-    followers: [{
+    followings: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Users"
     }],
