@@ -6,12 +6,7 @@ const postSchema = new mongoose.Schema({
         ref: "Users",
         required: true
     },
-    mediaTypes: {
-        type: String,
-        required: true,
-        enum: ['image', 'video']
-    },
-    media: {
+    media: [{
         url: {
             type: String,
             required: true
@@ -19,7 +14,7 @@ const postSchema = new mongoose.Schema({
         publicId: {
             type: String
         }
-    },
+    }],
     caption: {
         type: String
     },
@@ -28,8 +23,13 @@ const postSchema = new mongoose.Schema({
         ref: "Users"
     }],
     comments: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Users"
+        author: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Users"
+        },
+        message: {
+            type: String
+        }
     }]
 }, { timestamps: true })
 

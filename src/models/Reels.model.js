@@ -23,8 +23,13 @@ const reelSchema = new mongoose.Schema({
         ref: "Users"
     }],
     comments: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Users"
+        author: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Users"
+        },
+        message: {
+            type: String
+        }
     }]
 }, { timestamps: true })
 

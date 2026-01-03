@@ -77,8 +77,8 @@ export const followUnfollow = AsyncHandler(async (req, res) => {
 
 export const updateUserProfile = AsyncHandler(async (req, res) => {
     const user = req.user
-    const {fullName, bio, profession, gender} = req.body
-    
+    const { fullName, bio, profession, gender } = req.body
+
     const image = req.files?.[0]
     let uploadImage
     if (image) {
@@ -102,6 +102,9 @@ export const updateUserProfile = AsyncHandler(async (req, res) => {
         user.fullName = fullName
     }
     if (bio) {
+        if (bio.length > 150) {
+            throw new ApiErrors(400, 'bio is out of the length')
+        }
         user.bio = bio
     }
     if (profession) {
@@ -111,6 +114,7 @@ export const updateUserProfile = AsyncHandler(async (req, res) => {
         if (gender !== 'male' && gender !== 'female') {
             throw new ApiErrors(400, 'gender input wrong value')
         }
+        user.gender = gender
     }
     await user.save()
 
@@ -121,13 +125,15 @@ export const updateUserProfile = AsyncHandler(async (req, res) => {
         )
 })
 
-export const findUser = AsyncHandler(async(req, res)=>{
-    const {userName} = req.params
+export const findUser = AsyncHandler(async (req, res) => {
+    const { userName } = req.params
     if (!userName) {
         throw new ApiErrors(400, 'userName is required')
     }
 
-    const user = await Users.findOne({userName}).select('-password')
+    const user = await Users.findOne({ userName })
+        .select('-password')
+        .populate('followings', "image fullName userName _id")
 
     if (!user) {
         throw new ApiErrors(404, 'user not found')

@@ -42,17 +42,9 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Users"
     }],
-    posts: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Posts"
-    }],
     savedPosts: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Posts"
-    }],
-    reels: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Reels"
     }],
     stories: {
         type: mongoose.Schema.Types.ObjectId,
