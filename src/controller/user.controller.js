@@ -38,3 +38,37 @@ export const suggestedUser = AsyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, suggestedUser, "suggestedUser fetched successfully"));
 });
+
+export const followUnfollow = AsyncHandler(async(req, res)=>{
+    const user = req.user
+    const {followingUserId} = req.body
+
+    if (!followingUserId) {
+        throw new ApiErrors(400, 'following user Id is required')
+    }
+
+    if (user._id.toString() === followingUserId.toString()) {
+        throw new ApiErrors(400, "user can't follow himself")
+    }
+
+    const followingUser = await Users.findById(followingUserId)
+    if (!followingUser) {
+        throw new ApiErrors(404, 'following user not found')
+    }
+
+    const isFollowing = user.followings.some(id => id.toString() === followingUserId.toString())
+
+    if (isFollowing) {
+        user.followings = user.followings.filter((id)=>id.toString() !== followingUserId.toString())
+    } else{
+        user.followings.push(followingUserId)
+    }
+
+    await user.save()
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, followingUserId, isFollowing?'unfollow' : 'follow')
+        )
+})

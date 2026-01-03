@@ -6,5 +6,6 @@ const userRouter = express.Router()
 
 userRouter.get('/get-user', protect, userController.getUser)
 userRouter.get('/suggestedUser', protect, userController.suggestedUser)
+userRouter.patch('/followUnfollow', protect, userController.followUnfollow)
 
 export default userRouter
