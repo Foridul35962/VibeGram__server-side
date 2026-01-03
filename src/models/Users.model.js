@@ -31,6 +31,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         maxlength: 150,
     },
+    profession:{
+        type: String
+    },
+    gender:{
+        type: String,
+        enum: ['male', 'female']
+    },
     followings: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Users"
