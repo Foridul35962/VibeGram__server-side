@@ -20,16 +20,13 @@ const storySchema = new mongoose.Schema({
             type: String
         }
     },
-    viewers:[{
+    viewers: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Users"
-    }],
-    createdAt: {
-        type: Date,
-        default: Date.now,
-        expires: 86400
-    }
-}, {timestamps: true})
+    }]
+}, { timestamps: true })
+
+storySchema.index({ createdAt: 1 })
 
 const Stories = mongoose.model('Stories', storySchema)
 
