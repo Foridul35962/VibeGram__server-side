@@ -7,7 +7,7 @@ import uploadToCloudinary from "../utils/uploadToCloundnary.js";
 
 export const uploadPost = AsyncHandler(async (req, res) => {
     const userId = req.user._id
-    const { caption } = req.body
+    let { caption } = req.body
 
     const files = req.files
 
@@ -37,6 +37,8 @@ export const uploadPost = AsyncHandler(async (req, res) => {
     if (!uploadImg || uploadImg.length === 0) {
         throw new ApiErrors(500, 'post upload failed')
     }
+
+    caption = caption.trim()
 
     const post = await Posts.create({
         author: userId,
@@ -74,7 +76,9 @@ export const deletePost = AsyncHandler(async (req, res) => {
 
     try {
         for (const file of post.media) {
-            await cloudinary.uploader.destroy(file.publicId)
+            if (file.publicId) {
+                await cloudinary.uploader.destroy(file.publicId)
+            }
         }
     } catch (error) {
         throw new ApiErrors(500, 'post delete failed')
@@ -89,8 +93,27 @@ export const deletePost = AsyncHandler(async (req, res) => {
         )
 })
 
-export const getUserPosts = AsyncHandler(async (req, res) => {
-    const { userId } = req.body
+export const getPost = AsyncHandler(async (req, res) => {
+    const { postId } = req.params
+
+    if (!postId) {
+        throw new ApiErrors(400, 'post id is required')
+    }
+
+    const post = await Posts.findById(postId).populate('author', 'userName image fullName')
+    if (!post) {
+        throw new ApiErrors(404, 'post is not found')
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, post, 'post fetched successfully')
+        )
+})
+
+export const getUserAllPosts = AsyncHandler(async (req, res) => {
+    const { userId } = req.params
 
     if (!userId) {
         throw new ApiErrors(400, 'user id is required')
@@ -98,11 +121,7 @@ export const getUserPosts = AsyncHandler(async (req, res) => {
 
     const posts = await Posts.find({
         author: userId
-    })
-
-    if (!posts || posts.length === 0) {
-        throw new ApiErrors(404, 'posts not found')
-    }
+    }).sort({ createdAt: -1 })
 
     return res
         .status(200)
@@ -111,11 +130,11 @@ export const getUserPosts = AsyncHandler(async (req, res) => {
         )
 })
 
-export const savedPosts = AsyncHandler(async (req, res) => {
+export const savedUnsavedPosts = AsyncHandler(async (req, res) => {
     const { postId } = req.body
     const user = req.user
 
-    if (postId) {
+    if (!postId) {
         throw new ApiErrors(400, 'post id is required')
     }
 
@@ -124,7 +143,14 @@ export const savedPosts = AsyncHandler(async (req, res) => {
         throw new ApiErrors(404, 'post not found')
     }
 
-    user.savedPosts = postId
+    const isSaved = user.savedPosts.some(id => id.toString() === postId.toString())
+
+    if (isSaved) {
+        user.savedPosts = user.savedPosts.filter((id) => id.toString() !== postId.toString())
+    } else {
+        user.savedPosts.push(postId)
+    }
+
     await user.save()
 
     return res
@@ -136,7 +162,7 @@ export const savedPosts = AsyncHandler(async (req, res) => {
 
 export const likedUnlikedPost = AsyncHandler(async (req, res) => {
     const { postId } = req.body
-    const userId = req.user
+    const userId = req.user._id
 
     if (!postId) {
         throw new ApiErrors(400, 'post id is required')
@@ -144,11 +170,18 @@ export const likedUnlikedPost = AsyncHandler(async (req, res) => {
 
     const post = await Posts.findById(postId)
 
-    if (post.likes.includes(userId)) {
-        post.likes = post.likes.filter((id) => id !== userId)
+    if (!post) {
+        throw new ApiErrors(404, 'post not found')
+    }
+
+    const isLiked = post.likes.some(id => id.toString() === userId.toString())
+
+    if (isLiked) {
+        post.likes = post.likes.filter(id => id.toString() !== userId.toString())
     } else {
         post.likes.push(userId)
     }
+
 
     await post.save()
 
@@ -161,10 +194,14 @@ export const likedUnlikedPost = AsyncHandler(async (req, res) => {
 
 export const commentPost = AsyncHandler(async (req, res) => {
     const { postId, message } = req.body
-    const userId = req.user
+    const userId = req.user._id
 
     if (!postId) {
         throw new ApiErrors(400, 'post id is required')
+    }
+
+    if (!message || !message.trim()) {
+        throw new ApiErrors(400, 'message is required')
     }
 
     const post = await Posts.findById(postId)
@@ -172,9 +209,11 @@ export const commentPost = AsyncHandler(async (req, res) => {
         throw new ApiErrors(404, 'post not found')
     }
 
+    const trimMsg = message.trim()
+
     post.comments.push({
         author: userId,
-        message
+        message: trimMsg
     })
 
     await post.save()

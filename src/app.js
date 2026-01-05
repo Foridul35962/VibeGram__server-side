@@ -11,6 +11,7 @@ import userRouter from './routes/user.routes.js'
 import postRouter from './routes/post.routes.js'
 import reelRouter from './routes/reel.routes.js'
 import startStoryCleanupJob from './jobs/storyCleanup.job.js'
+import storyRouter from './routes/story.routes.js'
 
 const app = express()
 
@@ -32,6 +33,7 @@ app.use('/api/auth', authRouter)
 app.use('/api/user', userRouter)
 app.use('/api/post', postRouter)
 app.use('/api/reel', reelRouter)
+app.use('/api/story', storyRouter)
 
 app.get('/', (req, res)=>{
     res.send('vibegram server is running...')
