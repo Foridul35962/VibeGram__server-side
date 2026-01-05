@@ -46,10 +46,10 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Posts"
     }],
-    stories: {
+    stories: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Stories"
-    }
+    }]
 }, { timestamps: true })
 
 const Users = mongoose.model('Users', userSchema)
