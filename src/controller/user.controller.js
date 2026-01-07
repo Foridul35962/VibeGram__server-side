@@ -1,3 +1,4 @@
+import { populate } from "dotenv";
 import cloudinary from "../config/cloudinary.js";
 import ApiErrors from "../helpers/ApiErrors.js";
 import ApiResponse from "../helpers/ApiResponse.js";
@@ -127,13 +128,27 @@ export const updateUserProfile = AsyncHandler(async (req, res) => {
 
 export const findUser = AsyncHandler(async (req, res) => {
     const { userName } = req.params
+    const owner = req.user
+
     if (!userName) {
         throw new ApiErrors(400, 'userName is required')
     }
 
-    const user = await Users.findOne({ userName })
+    let query = await Users.findOne({ userName })
         .select('-password')
         .populate('followings', "image fullName userName _id")
+
+    if (owner.userName === userName) {
+        query = query.populate({
+            path: 'savedPosts',
+            populate: {
+                path: 'author',
+                select: 'userName image'
+            }
+        })
+    }
+
+    const user = await query
 
     if (!user) {
         throw new ApiErrors(404, 'user not found')
