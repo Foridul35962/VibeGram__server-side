@@ -100,7 +100,17 @@ export const getPost = AsyncHandler(async (req, res) => {
         throw new ApiErrors(400, 'post id is required')
     }
 
-    const post = await Posts.findById(postId).populate('author', 'userName image fullName')
+    const post = await Posts.findById(postId)
+        .populate('author', 'userName image fullName')
+        .populate('likes', 'userName image fullName')
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'author',
+                select: 'userName image fullName'
+            }
+        })
+
     if (!post) {
         throw new ApiErrors(404, 'post is not found')
     }
@@ -130,6 +140,26 @@ export const getUserAllPosts = AsyncHandler(async (req, res) => {
         )
 })
 
+export const getAllPosts = AsyncHandler(async (req, res) => {
+    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "20", 10), 1), 50);
+    const skip = (page - 1) * limit;
+
+    const [posts, total] = await Promise.all([
+        Posts.find({})
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("author", "fullName userName image"),
+        Posts.countDocuments({})
+    ]);
+
+    return res.status(200).json(
+        new ApiResponse(200, { posts, page, limit, total }, "all post fetched successfully")
+    );
+});
+
+
 export const savedUnsavedPosts = AsyncHandler(async (req, res) => {
     const { postId } = req.body
     const user = req.user
@@ -141,6 +171,10 @@ export const savedUnsavedPosts = AsyncHandler(async (req, res) => {
     const post = await Posts.findById(postId)
     if (!post) {
         throw new ApiErrors(404, 'post not found')
+    }
+
+    if (post.author.toString() === user._id.toString()) {
+        throw new ApiErrors(400, "You can't save your own post")
     }
 
     const isSaved = user.savedPosts.some(id => id.toString() === postId.toString())
@@ -185,16 +219,18 @@ export const likedUnlikedPost = AsyncHandler(async (req, res) => {
 
     await post.save()
 
+    await post.populate('likes', 'userName image fullName')
+
     return res
         .status(200)
         .json(
-            new ApiResponse(200, postId, 'post liked or unliked successfully')
+            new ApiResponse(200, { postId, postLikes: post.likes }, 'post liked or unliked successfully')
         )
 })
 
 export const commentPost = AsyncHandler(async (req, res) => {
     const { postId, message } = req.body
-    const userId = req.user._id
+    const user = req.user
 
     if (!postId) {
         throw new ApiErrors(400, 'post id is required')
@@ -212,15 +248,24 @@ export const commentPost = AsyncHandler(async (req, res) => {
     const trimMsg = message.trim()
 
     post.comments.push({
-        author: userId,
+        author: user._id,
         message: trimMsg
     })
 
     await post.save()
 
+    const comment = {
+        author: {
+            fullName: user.fullName,
+            image: user.image,
+            userName: user.userName
+        },
+        message: trimMsg
+    }
+
     return res
         .status(200)
         .json(
-            new ApiResponse(200, postId, 'comment successful')
+            new ApiResponse(200, { postId, comment }, 'comment successful')
         )
 })
