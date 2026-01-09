@@ -179,10 +179,13 @@ export const savedUnsavedPosts = AsyncHandler(async (req, res) => {
 
     const isSaved = user.savedPosts.some(id => id.toString() === postId.toString())
 
+    let msg
     if (isSaved) {
         user.savedPosts = user.savedPosts.filter((id) => id.toString() !== postId.toString())
+        msg='unsave'
     } else {
         user.savedPosts.push(postId)
+        msg = 'save'
     }
 
     await user.save()
@@ -190,7 +193,7 @@ export const savedUnsavedPosts = AsyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiResponse(200, postId, 'post saved successfully')
+            new ApiResponse(200, postId, msg)
         )
 })
 
