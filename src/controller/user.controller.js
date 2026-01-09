@@ -153,10 +153,17 @@ export const findUser = AsyncHandler(async (req, res) => {
     if (!user) {
         throw new ApiErrors(404, 'user not found')
     }
+    const followers = await Users.find({ followings: user._id })
+        .select('userName image _id')
+
+    user.followers = followers
+
+    const userObj = user.toObject();
+    userObj.followers = followers;
 
     return res
         .status(200)
         .json(
-            new ApiResponse(200, user, 'user fetched successfully')
+            new ApiResponse(200, userObj, 'user fetched successfully')
         )
 })
