@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import cloudinary from "../config/cloudinary.js";
 import ApiErrors from "../helpers/ApiErrors.js";
 import ApiResponse from "../helpers/ApiResponse.js";
@@ -95,7 +96,14 @@ export const getReel = AsyncHandler(async (req, res) => {
         throw new ApiErrors(400, 'reel id is required')
     }
 
-    const reel = await Reels.findById(reelId).populate('author', 'userName image fullName')
+    if (!mongoose.Types.ObjectId.isValid(reelId)) {
+        throw new ApiErrors(400, "invalid reel id");
+    }
+
+    const reel = await Reels.findById(reelId)
+        .populate('author', 'userName image fullName')
+        .populate('comments.author', 'userName image')
+
     if (!reel) {
         throw new ApiErrors(404, 'reel is not found')
     }
@@ -105,6 +113,28 @@ export const getReel = AsyncHandler(async (req, res) => {
         .json(
             new ApiResponse(200, reel, 'reel fetched successfully')
         )
+})
+
+export const getAllReels = AsyncHandler(async (req, res) => {
+    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "5", 10), 1), 50);
+    const skip = (page - 1) * limit;
+
+    const [reels, total] = await Promise.all([
+        Reels.find({})
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate("author", "fullName userName image")
+            .populate('comments.author', 'userName image'),
+        Reels.countDocuments({})
+    ]);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, { reels, page, limit, total }, "all reels fetched successfully")
+        );
 })
 
 export const getUserAllReels = AsyncHandler(async (req, res) => {
