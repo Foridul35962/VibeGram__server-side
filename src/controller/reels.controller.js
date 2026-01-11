@@ -48,6 +48,8 @@ export const uploadReel = AsyncHandler(async (req, res) => {
         throw new ApiErrors(500, 'reel save failed')
     }
 
+    await reel.populate('author', 'userName fullName image _id')
+
     return res
         .status(201)
         .json(
