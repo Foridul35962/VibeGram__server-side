@@ -212,9 +212,19 @@ export const commentReel = AsyncHandler(async (req, res) => {
 
     await reel.save()
 
+    await reel.populate({
+        path: 'comments',
+        populate: {
+            path: 'author',
+            select: 'userName image'
+        }
+    })
+
+    const comment = reel.comments.at(-1)
+
     return res
         .status(200)
         .json(
-            new ApiResponse(200, reelId, 'comment successful')
+            new ApiResponse(200, { reelId, comment }, 'comment successful')
         )
 })
