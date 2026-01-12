@@ -8,5 +8,6 @@ const storyRouter = express.Router()
 storyRouter.post('/upload', protect, upload, storyController.uploadStory)
 storyRouter.delete('/delete', protect, storyController.deleteStory)
 storyRouter.patch('/view', protect, storyController.viewStory)
+storyRouter.get('/allStory', protect, storyController.allFollowingUserStory)
 
 export default storyRouter
