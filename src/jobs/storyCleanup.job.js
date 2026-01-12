@@ -1,7 +1,6 @@
 import cron from "node-cron";
 import Stories from "../models/Story.model.js";
 import cloudinary from "../config/cloudinary.js";
-import Users from "../models/Users.model.js";
 
 const startStoryCleanupJob = () => {
     let isRunning = false;
@@ -20,11 +19,6 @@ const startStoryCleanupJob = () => {
 
             for (const story of expiredStories) {
                 try {
-                    await Users.updateOne(
-                        { _id: story.author },
-                        { $pull: { stories: story._id } }
-                    );
-
                     if (story.media?.publicId) {
                         await cloudinary.uploader.destroy(story.media.publicId, {
                             resource_type: story.mediaTypes === "video" ? "video" : "image",
