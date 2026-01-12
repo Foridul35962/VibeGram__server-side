@@ -12,6 +12,8 @@ import postRouter from './routes/post.routes.js'
 import reelRouter from './routes/reel.routes.js'
 import startStoryCleanupJob from './jobs/storyCleanup.job.js'
 import storyRouter from './routes/story.routes.js'
+import startMessageCleanupJob from './jobs/messageCleanUp.job.js'
+import messageRouter from './routes/message.routes.js'
 
 const app = express()
 
@@ -27,6 +29,7 @@ app.use(cookies())
 
 //jobs
 startStoryCleanupJob()
+startMessageCleanupJob()
 
 //routers
 app.use('/api/auth', authRouter)
@@ -34,6 +37,7 @@ app.use('/api/user', userRouter)
 app.use('/api/post', postRouter)
 app.use('/api/reel', reelRouter)
 app.use('/api/story', storyRouter)
+app.use('/api/message', messageRouter)
 
 app.get('/', (req, res)=>{
     res.send('vibegram server is running...')
