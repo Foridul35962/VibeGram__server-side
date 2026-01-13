@@ -3,6 +3,7 @@ import ApiResponse from "../helpers/ApiResponse.js";
 import AsyncHandler from "../helpers/AsyncHandler.js";
 import Conversations from "../models/Conversations.model.js";
 import Messages from "../models/Message.model.js";
+import Users from "../models/Users.model.js";
 import uploadToCloudinary from "../utils/uploadToCloundnary.js";
 
 export const sendMessage = AsyncHandler(async (req, res) => {
@@ -73,6 +74,13 @@ export const getAllMessages = AsyncHandler(async (req, res) => {
         throw new ApiErrors(400, 'sender and receiver are required')
     }
 
+    const partner = await Users.findById(receiver)
+        .select('userName fullName image')
+
+    if (!partner) {
+        throw new ApiErrors(404, 'partner not found')
+    }
+
     const conversation = await Conversations.findOne({
         participants: { $all: [sender, receiver] }
     }).populate('messages')
@@ -80,7 +88,7 @@ export const getAllMessages = AsyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiResponse(200, conversation.messages, 'all messages fetched successfully')
+            new ApiResponse(200, {messages: conversation.messages, partner}, 'all messages fetched successfully')
         )
 })
 
