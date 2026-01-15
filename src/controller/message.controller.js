@@ -59,6 +59,9 @@ export const sendMessage = AsyncHandler(async (req, res) => {
         })
     }
 
+    const io = req.app.get('io')
+    io.to(`user:${receiver}`).emit('message:new', message)
+
     return res
         .status(201)
         .json(
@@ -88,7 +91,7 @@ export const getAllMessages = AsyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiResponse(200, {messages: conversation.messages, partner}, 'all messages fetched successfully')
+            new ApiResponse(200, { messages: conversation.messages, partner }, 'all messages fetched successfully')
         )
 })
 
