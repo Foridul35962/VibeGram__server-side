@@ -70,6 +70,15 @@ const socketHandler = (io) => {
                 notifyChatPartners(io, userId, false)
             }
         })
+
+        //create room for post
+        socket.on('join:post', (postId) => {
+            socket.join(`post:${postId}`)
+        })
+
+        socket.on('leave:post', (postId) => {
+            socket.leave(`post:${postId}`)
+        })
     })
 }
 

@@ -182,7 +182,7 @@ export const savedUnsavedPosts = AsyncHandler(async (req, res) => {
     let msg
     if (isSaved) {
         user.savedPosts = user.savedPosts.filter((id) => id.toString() !== postId.toString())
-        msg='unsave'
+        msg = 'unsave'
     } else {
         user.savedPosts.push(postId)
         msg = 'save'
@@ -223,6 +223,9 @@ export const likedUnlikedPost = AsyncHandler(async (req, res) => {
     await post.save()
 
     await post.populate('likes', 'userName image fullName')
+
+    const io = req.app.get('io')
+    io.to(`post:${postId}`).emit('update:post-like', { postId, postLikes: post.likes })
 
     return res
         .status(200)
@@ -265,6 +268,9 @@ export const commentPost = AsyncHandler(async (req, res) => {
         },
         message: trimMsg
     }
+
+    const io = req.app.get('io')
+    io.to(`post:${postId}`).emit('update:post-comment', { postId, comment })
 
     return res
         .status(200)
