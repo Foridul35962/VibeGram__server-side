@@ -79,6 +79,15 @@ const socketHandler = (io) => {
         socket.on('leave:post', (postId) => {
             socket.leave(`post:${postId}`)
         })
+
+        //create room for reel
+        socket.on('reel:join', (reelId) => {
+            socket.join(`reel:${reelId}`)
+        })
+
+        socket.on('reel:leave', (reelId) => {
+            socket.leave(`reel:${reelId}`)
+        })
     })
 }
 

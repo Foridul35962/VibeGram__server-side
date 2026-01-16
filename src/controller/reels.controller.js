@@ -181,6 +181,9 @@ export const likedUnlikedReel = AsyncHandler(async (req, res) => {
 
     await reel.save()
 
+    const io = req.app.get('io')
+    io.to(`reel:${reelId}`).emit('updateReel:like', {reelId, reelLikes: reel.likes})
+
     return res
         .status(200)
         .json(
@@ -223,6 +226,9 @@ export const commentReel = AsyncHandler(async (req, res) => {
     })
 
     const comment = reel.comments.at(-1)
+
+    const io = req.app.get('io')
+    io.to(`reel:${reelId}`).emit('updateReel:comment', {reelId, comment})
 
     return res
         .status(200)
