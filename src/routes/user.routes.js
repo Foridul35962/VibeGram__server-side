@@ -10,5 +10,6 @@ userRouter.get('/suggestedUser', protect, userController.suggestedUser)
 userRouter.patch('/followUnfollow', protect, userController.followUnfollow)
 userRouter.patch('/updateUserProfile', protect, upload, userController.updateUserProfile)
 userRouter.get('/find-user/:userName', protect, userController.findUser)
+userRouter.get('/search-user', userController.searchUser)
 
 export default userRouter

@@ -167,3 +167,24 @@ export const findUser = AsyncHandler(async (req, res) => {
             new ApiResponse(200, userObj, 'user fetched successfully')
         )
 })
+
+export const searchUser = AsyncHandler(async (req, res) => {
+    const { user } = req.query
+
+    if (!user) {
+        throw new ApiErrors(400, 'search element is required')
+    }
+
+    const users = await Users.find({
+        $or: [
+            { userName: { $regex: user, $options: "i" } },
+            { fullName: { $regex: user, $options: "i" } }
+        ]
+    }).select('-password')
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, users, 'user fectched successfully')
+        )
+})
