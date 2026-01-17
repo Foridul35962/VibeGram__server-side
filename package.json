@@ -7,7 +7,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "npx nodemon index.js"
+    "dev": "npx nodemon index.js",
+    "start": "node index.js"
   },
   "dependencies": {
     "@arcjet/inspect": "^1.0.0-beta.17",
@@ -24,7 +25,9 @@
     "mongoose": "^9.1.1",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
-    "nodemon": "^3.1.11",
     "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
   }
 }
