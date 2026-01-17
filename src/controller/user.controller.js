@@ -170,17 +170,19 @@ export const findUser = AsyncHandler(async (req, res) => {
 
 export const searchUser = AsyncHandler(async (req, res) => {
     const { user } = req.query
+    const userId = req.user._id
 
     if (!user) {
         throw new ApiErrors(400, 'search element is required')
     }
 
     const users = await Users.find({
+        _id: { $ne: userId },
         $or: [
             { userName: { $regex: user, $options: "i" } },
             { fullName: { $regex: user, $options: "i" } }
         ]
-    }).select('-password')
+    }).select('userName fullName image _id')
 
     return res
         .status(200)
