@@ -2,6 +2,7 @@ import cloudinary from "../config/cloudinary.js";
 import ApiErrors from "../helpers/ApiErrors.js";
 import ApiResponse from "../helpers/ApiResponse.js";
 import AsyncHandler from "../helpers/AsyncHandler.js";
+import Notifications from "../models/Notification.model.js";
 import Posts from "../models/Posts.model.js";
 import uploadToCloudinary from "../utils/uploadToCloundnary.js";
 
@@ -217,6 +218,21 @@ export const likedUnlikedPost = AsyncHandler(async (req, res) => {
         post.likes = post.likes.filter(id => id.toString() !== userId.toString())
     } else {
         post.likes.push(userId)
+
+        //create notification
+        if (post.author.toString() !== userId.toString()) {
+            const notification = await Notifications.create({
+                sender: userId,
+                receiver: post.author,
+                type: 'like',
+                message: `liked your post`,
+                posts: post._id
+            })
+            await notification.populate('sender', 'userName image')
+
+            const io = req.app.get('io')
+            io.to(`user:${post.author}`).emit('update:notification', { notification })
+        }
     }
 
 
@@ -237,6 +253,7 @@ export const likedUnlikedPost = AsyncHandler(async (req, res) => {
 export const commentPost = AsyncHandler(async (req, res) => {
     const { postId, message } = req.body
     const user = req.user
+    const userId = req.user._id
 
     if (!postId) {
         throw new ApiErrors(400, 'post id is required')
@@ -267,6 +284,21 @@ export const commentPost = AsyncHandler(async (req, res) => {
             userName: user.userName
         },
         message: trimMsg
+    }
+
+    //create notification
+    if (post.author.toString() !== userId.toString()) {
+        const notification = await Notifications.create({
+            sender: userId,
+            receiver: post.author,
+            type: 'comment',
+            message: `commented on your post`,
+            posts: post._id
+        })
+        await notification.populate('sender', 'userName image')
+
+        const io = req.app.get('io')
+        io.to(`user:${post.author}`).emit('update:notification', { notification })
     }
 
     const io = req.app.get('io')

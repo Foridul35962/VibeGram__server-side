@@ -5,6 +5,7 @@ import ApiResponse from "../helpers/ApiResponse.js";
 import AsyncHandler from "../helpers/AsyncHandler.js";
 import Reels from "../models/Reels.model.js";
 import uploadToCloudinary from "../utils/uploadToCloundnary.js";
+import Notifications from "../models/Notification.model.js";
 
 export const uploadReel = AsyncHandler(async (req, res) => {
     const userId = req.user._id
@@ -177,12 +178,27 @@ export const likedUnlikedReel = AsyncHandler(async (req, res) => {
         reel.likes = reel.likes.filter(id => id.toString() !== userId.toString())
     } else {
         reel.likes.push(userId)
+
+        //create notification
+        if (reel.author.toString() !== userId.toString()) {
+            const notification = await Notifications.create({
+                sender: userId,
+                receiver: reel.author,
+                type: 'like',
+                message: `liked your reel`,
+                reels: reel._id
+            })
+            await notification.populate('sender', 'userName image')
+
+            const io = req.app.get('io')
+            io.to(`user:${reel.author}`).emit('update:notification', { notification })
+        }
     }
 
     await reel.save()
 
     const io = req.app.get('io')
-    io.to(`reel:${reelId}`).emit('updateReel:like', {reelId, reelLikes: reel.likes})
+    io.to(`reel:${reelId}`).emit('updateReel:like', { reelId, reelLikes: reel.likes })
 
     return res
         .status(200)
@@ -225,10 +241,25 @@ export const commentReel = AsyncHandler(async (req, res) => {
         }
     })
 
+    //create notification
+    if (reel.author.toString() !== userId.toString()) {
+        const notification = await Notifications.create({
+            sender: userId,
+            receiver: reel.author,
+            type: 'comment',
+            message: `commented on your reel`,
+            reels: reel._id
+        })
+        await notification.populate('sender', 'userName image')
+
+        const io = req.app.get('io')
+        io.to(`user:${reel.author}`).emit('update:notification', { notification })
+    }
+
     const comment = reel.comments.at(-1)
 
     const io = req.app.get('io')
-    io.to(`reel:${reelId}`).emit('updateReel:comment', {reelId, comment})
+    io.to(`reel:${reelId}`).emit('updateReel:comment', { reelId, comment })
 
     return res
         .status(200)

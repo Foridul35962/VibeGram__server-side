@@ -5,6 +5,7 @@ import ApiResponse from "../helpers/ApiResponse.js";
 import AsyncHandler from "../helpers/AsyncHandler.js";
 import Users from "../models/Users.model.js";
 import uploadToCloudinary from "../utils/uploadToCloundnary.js";
+import Notifications from "../models/Notification.model.js";
 
 export const getUser = AsyncHandler(async (req, res) => {
     const user = req.user
@@ -65,6 +66,19 @@ export const followUnfollow = AsyncHandler(async (req, res) => {
         user.followings = user.followings.filter((id) => id.toString() !== followingUserId.toString())
     } else {
         user.followings.push(followingUserId)
+
+        //create notification
+        const notification = await Notifications.create({
+            sender: user._id,
+            receiver: followingUserId,
+            type: 'follow',
+            message: `started following you`
+        })
+        await notification.populate('sender', 'userName image')
+
+        const io = req.app.get('io')
+        io.to(`user:${followingUserId}`).emit('update:notification', { notification })
+
     }
 
     await user.save()
